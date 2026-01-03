@@ -101,3 +101,17 @@ class LoginUserOut(BaseModel):
     role : Role
     access_token: str
     token_type: str
+
+
+
+class Comment(BaseModel):
+    content : str
+
+
+class CommentOut(Comment):
+    id : int
+    owner_id: int
+    post_id: int
+    owner: Optional[UserOut] = None
+    post : Post
+

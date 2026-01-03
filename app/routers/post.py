@@ -1,11 +1,11 @@
 from fastapi import status, Depends, HTTPException, Response, APIRouter
-from .. import models, database, schemas, oauth2
+from app import models, database, schemas, oauth2
 
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from sqlalchemy import func
 
-from ..schemas import Role
+from app.schemas import Role
 
 router = APIRouter(prefix="/posts", tags=["POST"])
 

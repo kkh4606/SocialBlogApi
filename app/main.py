@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from app.database import engine
 
 from app import  models
-from app.routers import user, post, auth, vote, image_upload
+from app.routers import user, post, auth, vote, image_upload, comment
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -27,6 +27,8 @@ app.include_router(auth.router)
 app.include_router(vote.router)
 
 app.include_router(image_upload.router)
+
+app.include_router(comment.router)
 
 
 

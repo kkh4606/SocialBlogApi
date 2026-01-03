@@ -36,6 +36,11 @@ class User(Base):
         passive_deletes=True,
     )
 
+    comments = relationship(
+        "Comment",
+        back_populates="owner",
+    )
+
 
 class Post(Base):
     __tablename__ = "posts"
@@ -63,6 +68,8 @@ class Post(Base):
         passive_deletes=True,
     )
 
+    comments = relationship('Comment', back_populates="post")
+
 
 class Vote(Base):
     __tablename__ = "votes"
@@ -78,3 +85,19 @@ class Vote(Base):
         ForeignKey("posts.id", ondelete="CASCADE"),
         primary_key=True,
     )
+
+
+class Comment(Base):
+    __tablename__ = "comments"
+    id = Column(Integer, primary_key=True, nullable=False)
+    content = Column(String, nullable=False)
+    created_at = Column(
+        TIMESTAMP(timezone=True),nullable=False, server_default=text("now()")
+    )
+    post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"))
+    owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+
+    owner = relationship('User', back_populates="comments")
+
+    post = relationship("Post", back_populates="comments")
+
