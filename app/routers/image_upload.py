@@ -38,7 +38,7 @@ async def upload_file(
         if upload_result.response_metadata.http_status_code != 200:
             raise HTTPException(status_code=400, detail="Upload failed")
 
-        # ✅ UPDATE EXISTING USER
+
         user.profile_pic = upload_result.url
 
         db.commit()

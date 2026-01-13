@@ -70,7 +70,7 @@ def update_user(
     user_query = db.query(models.User).filter(models.User.id == id)
     user = user_query.first()
 
-    if user == None:
+    if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"user with id : {id} not found",

@@ -1,5 +1,7 @@
-from sqlalchemy import Column, String, Integer, ForeignKey, Boolean
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+from typing import Optional
+
+from sqlalchemy import Column, String, Integer, ForeignKey, Boolean, false
+from sqlalchemy.orm import relationship, Mapped, mapped_column, Relationship
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
 from sqlalchemy import Enum as SQLEnum
@@ -46,7 +48,6 @@ class Post(Base):
     __tablename__ = "posts"
 
     id = Column(Integer, primary_key=True, nullable=False)
-    title = Column(String, nullable=False)
     content = Column(String, nullable=False)
     published = Column(Boolean, server_default="TRUE", nullable=False)
 
@@ -68,7 +69,7 @@ class Post(Base):
         passive_deletes=True,
     )
 
-    comments = relationship('Comment', back_populates="post")
+    comments = relationship("Comment", back_populates="post")
 
 
 class Vote(Base):
@@ -92,12 +93,22 @@ class Comment(Base):
     id = Column(Integer, primary_key=True, nullable=False)
     content = Column(String, nullable=False)
     created_at = Column(
-        TIMESTAMP(timezone=True),nullable=False, server_default=text("now()")
+        TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
     )
     post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"))
     owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
 
-    owner = relationship('User', back_populates="comments")
-
+    owner = relationship("User", back_populates="comments")
     post = relationship("Post", back_populates="comments")
 
+    parent_id = Column(
+        Integer, ForeignKey("comments.id", ondelete="CASCADE"), nullable=True
+    )
+
+    parent = relationship("Comment", back_populates="comments_arr", remote_side=[id])
+
+    comments_arr = relationship(
+        "Comment",
+        back_populates="parent",
+        cascade="all, delete-orphan",
+    )

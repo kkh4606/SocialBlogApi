@@ -6,14 +6,12 @@ from pydantic.types import conint
 from enum import Enum
 
 
-
 class Role(Enum):
-    ADMIN = 'admin'
-    USER = 'user'
+    ADMIN = "admin"
+    USER = "user"
 
 
 class PostBase(BaseModel):
-    title: Optional[str] = None
     content: str
     published: bool = True
 
@@ -30,18 +28,19 @@ class User(BaseModel):
     id: int
     email: EmailStr
     name: str
-    profile_pic : str | None
+    profile_pic: str | None
     created_at: datetime
+
 
 class UserCreate(BaseModel):
     name: str
     email: EmailStr
     password: str
-    role : Optional[Role] = Role.USER
+    role: Optional[Role] = Role.USER
 
 
 class UserLogin(UserCreate):
-    email:str
+    email: str
     password: str
 
 
@@ -53,7 +52,7 @@ class UserOut(BaseModel):
     id: int
     email: EmailStr
     name: str
-    profile_pic : str | None = None
+    profile_pic: str | None = None
     role: Role = Role.USER
     created_at: datetime
 
@@ -61,10 +60,33 @@ class UserOut(BaseModel):
         from_attributes = True
 
 
+class CommentCreate(BaseModel):
+    content: str
+    parent_id: int | None = None
+
+
+class Comment(BaseModel):
+    id: int
+    post_id: int
+    owner_id: int
+    content: str
+
+
+class CommentOut(Comment):
+    id: int
+    owner_id: int
+    post_id: int
+    parent_id: Optional[int] = None
+    created_at: datetime
+    comments_arr: List["CommentOut"] = []
+    owner: Optional[UserOut] = None
+
+
 class Post(PostBase):
     id: int
     created_at: datetime
     owner_id: int
+    comments: List[CommentOut] = []
     owner: Optional[UserOut] = None
 
     class Config:
@@ -91,27 +113,13 @@ class TokenData(BaseModel):
 
 class Vote(BaseModel):
     post_id: int
-    dir: conint(le=1)  # type:ignore
+    dir: conint(le=1)  # type: ignore
 
 
 class LoginUserOut(BaseModel):
-    id : int
-    name : str
+    id: int
+    name: str
     email: EmailStr
-    role : Role
+    role: Role
     access_token: str
     token_type: str
-
-
-
-class Comment(BaseModel):
-    content : str
-
-
-class CommentOut(Comment):
-    id : int
-    owner_id: int
-    post_id: int
-    owner: Optional[UserOut] = None
-    post : Post
-

@@ -1,7 +1,7 @@
 from fastapi import status, Depends, HTTPException, Response, APIRouter
 from app import models, database, schemas, oauth2
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from sqlalchemy import func
 
@@ -26,12 +26,18 @@ def get_posts(
     #     .offset(skip)
     # ).all()
     posts = (
-        db.query(models.Post, func.count(models.Vote.post_id).label("votes"))
+        db.query(
+            models.Post,
+            func.count(models.Vote.post_id).label("votes"),
+        )
         .join(models.Vote, models.Post.id == models.Vote.post_id, isouter=True)
-        .group_by(models.Post.id).order_by(models.Post.created_at.desc())
-        .filter(models.Post.title.contains(search))
+        .group_by(models.Post.id)
+        .options(joinedload(models.Post.comments))
+        # .filter(models.Post.title.contains(search))
+        .order_by(models.Post.created_at.desc())
         .limit(limit)
-        .offset(skip).all()
+        .offset(skip)
+        .all()
     )
 
     return posts
@@ -44,7 +50,7 @@ def create_posts(
     current_user: int = Depends(oauth2.get_current_user),
 ):
 
-    new_post = models.Post(**post.model_dump(), owner_id=current_user.id)  # type:ignore
+    new_post = models.Post(**post.model_dump(), owner_id=current_user.id)  # type: ignore
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
@@ -95,7 +101,7 @@ def delete_post(
             detail=f"post with id : {id} not found",
         )
 
-    if post.owner_id != current_user.id and current_user.role != Role.ADMIN :
+    if post.owner_id != current_user.id and current_user.role != Role.ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No authorized to perform requested action",
@@ -125,7 +131,7 @@ def update_post(
             detail=f"post with id : {id} not found",
         )
 
-    if post.owner_id != current_user.id:  # type:ignore
+    if post.owner_id != current_user.id:  # type: ignore
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No authorized to perform requested action",

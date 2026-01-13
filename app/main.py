@@ -33,5 +33,5 @@ app.include_router(comment.router)
 
 
 @app.get("/")
-def Hello():
+def hello():
     return {"message": "Hello, World"}
