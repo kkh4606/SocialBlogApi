@@ -4,11 +4,11 @@ dummyComments = [
         "content": "first comment",
         "comments": [
             {
-                "id": 1,
+                "id": 2,
                 "content": "first reply",
                 "comments": [
                     {
-                        "id": 1,
+                        "id": 3,
                         "content": "first nested reply",
                         "comments": [],
                     }
@@ -19,17 +19,5 @@ dummyComments = [
 ]
 
 
-index = 0
-
-count = 0
-
-
-for index, comment in enumerate(dummyComments):
-    for reply in comment["comments"]:
-        count += 1
-        for nested in reply["comments"]:
-            count += 1
-            print(nested)
-
-
-print(count)
+def find_nested_inner_content():
+    return
