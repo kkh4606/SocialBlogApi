@@ -65,6 +65,10 @@ class CommentCreate(BaseModel):
     parent_id: int | None = None
 
 
+class EditComment(BaseModel):
+    content: str
+
+
 class Comment(BaseModel):
     id: int
     post_id: int

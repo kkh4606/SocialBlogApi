@@ -104,3 +104,29 @@ def delete_comment(
     db.delete(comment)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.put("/comments/{comment_id}")
+def update_comment(
+    comment_id: int,
+    comment_update: schemas.EditComment,
+    db: Session = Depends(database.get_db),
+    current_user: schemas.User = Depends(oauth2.get_current_user),
+):
+
+    comment = db.query(models.Comment).filter(models.Comment.id == comment_id).first()
+    if not comment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Comment not found"
+        )
+
+    if current_user.id != comment.owner_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="you don't have permission to perform request acton",
+        )
+
+    comment.content = comment_update.content
+    db.commit()
+    db.refresh(comment)
+    return comment

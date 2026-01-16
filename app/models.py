@@ -41,6 +41,7 @@ class User(Base):
     comments = relationship(
         "Comment",
         back_populates="owner",
+        cascade="all, delete-orphan",
     )
 
 
@@ -69,7 +70,7 @@ class Post(Base):
         passive_deletes=True,
     )
 
-    comments = relationship("Comment", back_populates="post")
+    comments = relationship("Comment", back_populates="post", cascade="all, delete-orphan",)
 
 
 class Vote(Base):
