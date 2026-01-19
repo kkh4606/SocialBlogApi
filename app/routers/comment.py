@@ -20,6 +20,18 @@ def get_comments(
     return comments
 
 
+@router.get("/comments/{id}", response_model=schemas.CommentOut)
+def get_comment(
+    id: int,
+    db: Session = Depends(database.get_db),
+    current_user=Depends(oauth2.get_current_user),
+):
+
+    comment = db.query(models.Comment).filter(models.Comment.id == id).first()
+
+    return comment
+
+
 @router.post(
     "/comments/{post_id}",
     status_code=status.HTTP_201_CREATED,
