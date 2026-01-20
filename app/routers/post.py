@@ -34,7 +34,7 @@ def get_posts(
         .group_by(models.Post.id)
         .options(joinedload(models.Post.comments))
         .order_by(models.Post.created_at.desc())
-        .filter(models.Post.content.ilike(f"%{search}%"))
+        .filter(func.lower(models.Post.content).contains(search.lower()))
         .limit(limit)
         .offset(skip)
         .all()
