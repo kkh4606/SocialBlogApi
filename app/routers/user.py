@@ -6,10 +6,10 @@ from typing import List
 
 from ..schemas import User
 
-router = APIRouter(prefix="/users", tags=["USERS"])
+router = APIRouter()
 
 
-@router.get("/", response_model=List[schemas.UserOut])
+@router.get("/", response_model=List[schemas.UserResponse])
 def get_users(
     db: Session = Depends(database.get_db),
     current_user: int = Depends(oauth2.get_current_user),
@@ -18,62 +18,38 @@ def get_users(
     return users
 
 
-@router.post("/",  status_code=status.HTTP_201_CREATED)
-def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
+@router.get("/me", response_model=schemas.UserResponse)
+def get_me(current_user: schemas.User = Depends(oauth2.get_current_user)):
 
-    user_exit = db.query(models.User).filter(models.User.email == user.email).first()
-
-    if user_exit:
-        raise HTTPException(status_code=409, detail="email already exists")
-
-    hashed_password = utils.hash_password(user.password)
-    user.password = hashed_password
-    new_user = models.User(**user.model_dump())
-
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-
-    token = oauth2.create_access_token(data={"user_id": new_user.id})
-    return {
-        "id": new_user.id,
-        "name": new_user.name,
-        "email": new_user.email,
-        "created_at": new_user.created_at,
-        "token": token,
-    }
-
-@router.get("/me", )
-def get_me(
-    current_user: schemas.User = Depends(oauth2.get_current_user)
-):
+    return current_user
 
 
-    return  current_user
-@router.get("/{id}", response_model=schemas.UserOut)
-def get_user(id: int, db: Session = Depends(database.get_db)):
-    user = db.query(models.User).filter(models.User.id == id).first()
+@router.get("/{user_id}", response_model=schemas.UserResponse)
+def get_user(user_id: int, db: Session = Depends(database.get_db)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
 
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"user with id : {id} not found",
+            detail=f"user with id : {user_id} not found",
         )
 
     return user
 
 
-@router.put("/{id}", response_model=schemas.UserOut)
+@router.put("/{user_id}", response_model=schemas.UserResponse)
 def update_user(
-    id: int, user_update: schemas.UserUpdate, db: Session = Depends(database.get_db)
+    user_id: int,
+    user_update: schemas.UserUpdate,
+    db: Session = Depends(database.get_db),
 ):
-    user_query = db.query(models.User).filter(models.User.id == id)
+    user_query = db.query(models.User).filter(models.User.id == user_id)
     user = user_query.first()
 
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"user with id : {id} not found",
+            detail=f"user with id : {user_id} not found",
         )
 
     user_query.update(user_update.model_dump(), synchronize_session=False)
@@ -82,30 +58,19 @@ def update_user(
     return user
 
 
-@router.delete("/{id}")
-def delete_user(id: int, db: Session = Depends(database.get_db), current_user : User = Depends(oauth2.get_current_user)):
-    user_query = db.query(models.User).filter(models.User.id == id)
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(
+    user_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    user_query = db.query(models.User).filter(models.User.id == user_id)
 
     if user_query.first() is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"user with id : {id} was not found",
+            detail=f"user with id : {user_id} was not found",
         )
-
-    # if current_user.role != "admin":
-    #     raise HTTPException(
-    #         status_code=status.HTTP_403_FORBIDDEN,
-    #         detail=f'you are not allowed to perform this action',
-    #     )
-
-
-
     user_query.delete(synchronize_session=False)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-
-
-
-

@@ -1,4 +1,5 @@
-from pydantic import BaseModel, EmailStr, PlainSerializer
+from pydantic import BaseModel, EmailStr, Field
+from pydantic.config import ConfigDict
 
 from datetime import datetime
 from typing import Optional, List
@@ -12,7 +13,7 @@ class Role(Enum):
 
 
 class PostBase(BaseModel):
-    content: str
+    content: str = Field(min_length=1)
     published: bool = True
 
 
@@ -25,21 +26,16 @@ class PostUpdate(PostBase):
 
 
 class User(BaseModel):
-    id: int
-    email: EmailStr
-    name: str
-    profile_pic: str | None
-    created_at: datetime
+    name: str = Field(min_length=1, max_length=50)
+    email: EmailStr = Field(max_length=120)
 
 
-class UserCreate(BaseModel):
-    name: str
-    email: EmailStr
+class UserCreate(User):
     password: str
     role: Optional[Role] = Role.USER
 
 
-class UserLogin(UserCreate):
+class UserLogin(BaseModel):
     email: str
     password: str
 
@@ -48,16 +44,14 @@ class UserUpdate(UserCreate):
     pass
 
 
-class UserOut(BaseModel):
+class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     email: EmailStr
     name: str
     profile_pic: str | None = None
     role: Role = Role.USER
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class CommentCreate(BaseModel):
@@ -77,13 +71,14 @@ class Comment(BaseModel):
 
 
 class CommentOut(Comment):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     owner_id: int
     post_id: int
     parent_id: Optional[int] = None
     created_at: datetime
     comments_arr: List["CommentOut"] = []
-    owner: Optional[UserOut] = None
+    owner: Optional[UserResponse] = None
 
 
 class Post(PostBase):
@@ -91,19 +86,16 @@ class Post(PostBase):
     created_at: datetime
     owner_id: int
     comments: List[CommentOut] = []
-    owner: Optional[UserOut] = None
+    owner: Optional[UserResponse] = None
 
     class Config:
         from_attributes = True
 
 
 class PostOut(BaseModel):
-
+    model_config = ConfigDict(from_attributes=True)
     Post: Post
     votes: int
-
-    class Config:
-        from_attributes = True
 
 
 class Token(BaseModel):
@@ -120,7 +112,7 @@ class Vote(BaseModel):
     dir: conint(le=1)  # type: ignore
 
 
-class LoginUserOut(BaseModel):
+class LoginUserResponse(BaseModel):
     id: int
     name: str
     email: EmailStr
